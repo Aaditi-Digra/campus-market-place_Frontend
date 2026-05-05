@@ -13,6 +13,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import "react-toastify/dist/ReactToastify.css";
 import MyProfile from "./pages/MyProfile";
 import Signout from "./pages/auth/Signout";
+import { Provider } from "react-redux";
+import { store } from "./redux/stores/store";
 
 function App() {
   const router = createBrowserRouter([
@@ -71,9 +73,11 @@ function App() {
     },
   ]);
   return (
-    <AuthProvider>
-      <RouterProvider router={router} />
-    </AuthProvider>
+    <Provider store={store}>
+      <AuthProvider>
+        <RouterProvider router={router} />
+      </AuthProvider>
+    </Provider>
   );
 }
 
