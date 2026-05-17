@@ -6,6 +6,7 @@ import Orders from "./pages/Orders";
 import Wishlist from "./pages/Wishlist";
 import Chats from "./pages/Chats";
 import MyListing from "./pages/MyListing";
+import ProductDetail from "./pages/ProductDetail";
 import Signup from "./pages/auth/Signup";
 import Signin from "./pages/auth/Signin";
 import { AuthProvider } from "./context/AuthContext";
@@ -26,14 +27,19 @@ function App() {
           path: "/",
           element: <Dashboard />,
         },
-        {
-          path: "/products",
-          element: <Products />,
-        },
+
 
         {
           element: <ProtectedRoute />,
           children: [
+            {
+              path: "/products",
+              element: <Products />,
+            },
+            {
+              path: "/product/:id",
+              element: <ProductDetail />,
+            },
             {
               path: "/wishlist",
               element: <Wishlist />,

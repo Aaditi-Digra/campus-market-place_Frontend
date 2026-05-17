@@ -144,11 +144,10 @@ const Products = () => {
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all cursor-pointer whitespace-nowrap ${
-                  selectedCategory === cat
+                className={`px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all cursor-pointer whitespace-nowrap ${selectedCategory === cat
                     ? "bg-blue-600 text-white shadow-lg scale-105"
                     : "bg-blue-500/10 text-blue-600 hover:bg-blue-500/20"
-                }`}
+                  }`}
               >
                 {cat}
               </button>
@@ -211,9 +210,13 @@ const Products = () => {
                         >
                           {product.title}
                         </h3>
-                        {product.quantity > 0 && (
+                        {product.inStock && product.quantity > 0 ? (
                           <span className="flex-shrink-0 text-[8px] px-1.5 py-0.5 bg-blue-500 text-white rounded font-black uppercase tracking-tighter">
                             Active
+                          </span>
+                        ) : (
+                          <span className="flex-shrink-0 text-[8px] px-1.5 py-0.5 bg-red-600 text-white rounded font-black uppercase tracking-tighter">
+                            Sold Out
                           </span>
                         )}
                       </div>
@@ -279,11 +282,10 @@ const Products = () => {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => toggleWishlist(product._id)}
-                        className={`group/heart p-2.5 rounded-xl transition-all duration-300 cursor-pointer border ${
-                          wishlistedIds.includes(product._id)
+                        className={`group/heart p-2.5 rounded-xl transition-all duration-300 cursor-pointer border ${wishlistedIds.includes(product._id)
                             ? "bg-red-50 text-red-500 border-red-100"
                             : "bg-gray-100 text-gray-400 hover:bg-red-50 hover:text-red-500 hover:border-red-100 border-transparent"
-                        }`}
+                          }`}
                         title={
                           wishlistedIds.includes(product._id)
                             ? "Remove from Wishlist"
@@ -296,11 +298,10 @@ const Products = () => {
                         }}
                       >
                         <svg
-                          className={`w-5 h-5 transition-transform duration-300 group-hover/heart:scale-110 ${
-                            wishlistedIds.includes(product._id)
+                          className={`w-5 h-5 transition-transform duration-300 group-hover/heart:scale-110 ${wishlistedIds.includes(product._id)
                               ? "fill-current"
                               : ""
-                          }`}
+                            }`}
                           fill={
                             wishlistedIds.includes(product._id)
                               ? "currentColor"
@@ -316,6 +317,12 @@ const Products = () => {
                             d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 006.364-6.364 4.5 4.5 0 00-6.364 0L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
                           />
                         </svg>
+                      </button>
+                      <button
+                        onClick={() => navigate(`/product/${product._id}`)}
+                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-blue-600 text-blue-600 font-black text-[11px] uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all cursor-pointer active:scale-[0.98]"
+                      >
+                        See Details
                       </button>
                       <button
                         onClick={() =>

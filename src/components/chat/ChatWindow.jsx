@@ -1,9 +1,10 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import apiClient from "../../api/apiClient";
 
 const ChatWindow = ({ messages, currentUser, otherParticipant, activeChat, updateActiveChat }) => {
   const scrollRef = useRef();
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -28,31 +29,34 @@ const ChatWindow = ({ messages, currentUser, otherParticipant, activeChat, updat
   const product = activeChat?.productId;
   const isSeller = product?.seller?.toString() === currentUser?._id?.toString();
 
-  const handleMarkAsSold = async () => {
-    const confirmSold = window.confirm("Are you sure you want to mark this item as sold? This will deduct the quantity from the product and generate an order.");
-    if (!confirmSold) return;
+  const handleMarkAsSold = () => {
+    setIsConfirmModalOpen(true);
+  };
 
+  const confirmMarkAsSold = async () => {
+    setIsConfirmModalOpen(false);
     try {
-      // Generate order (backend now handles quantity deduction and status update)
-      const response = await apiClient.post("/orders/create", {
+      // 1. Generate the completed order
+      await apiClient.post("/orders/create", {
         productId: product._id,
         buyerId: otherParticipant._id,
         sellerId: currentUser._id,
         quantity: activeChat.quantity || 1,
       });
 
-      toast.success("Order generated and product quantity updated!");
+      // 2. Mark the product listing as completely sold out (inStock: false) in DB
+      await apiClient.patch(`/products/mark-as-sold/${product._id}`);
+
+      toast.success("Listing marked as Sold and order generated successfully!");
       
-      // Update local state to reflect the new quantity and stock status
+      // 3. Update local state to reflect sold out status immediately
       if (updateActiveChat) {
-        const soldQty = activeChat.quantity || 1;
-        const newTotalQty = Math.max(0, product.quantity - soldQty);
         updateActiveChat({ 
           ...activeChat, 
           productId: { 
             ...product, 
-            quantity: newTotalQty,
-            inStock: newTotalQty > 0 
+            quantity: 0,
+            inStock: false 
           } 
         });
       }
@@ -224,6 +228,78 @@ const ChatWindow = ({ messages, currentUser, otherParticipant, activeChat, updat
         })}
         <div ref={scrollRef} />
       </div>
+
+      {/* Confirm Sale Modal */}
+      {isConfirmModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm cursor-pointer" 
+            onClick={() => setIsConfirmModalOpen(false)}
+          />
+          
+          {/* Modal Container */}
+          <div 
+            className="relative w-full max-w-md p-8 rounded-[2.5rem] border shadow-2xl flex flex-col items-center text-center animate-in fade-in zoom-in-95 duration-200"
+            style={{
+              backgroundColor: "var(--mui-palette-background-paper)",
+              borderColor: "var(--mui-palette-divider)",
+            }}
+          >
+            {/* Header Icon */}
+            <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mb-6">
+              <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+
+            {/* Content */}
+            <h3 className="text-2xl font-black uppercase tracking-tighter mb-3" style={{ color: "var(--mui-palette-text-primary)" }}>
+              Confirm Sale
+            </h3>
+            <p className="text-xs font-semibold leading-relaxed mb-6 opacity-75" style={{ color: "var(--mui-palette-text-secondary)" }}>
+              Are you sure you want to mark this item as sold? This will deduct the quantity from the product inventory and generate a completed order for the buyer.
+            </p>
+
+            {/* Quick Details Box */}
+            <div className="w-full p-4 rounded-2xl bg-gray-500/5 border mb-8 flex flex-col gap-2.5 text-left" style={{ borderColor: "var(--mui-palette-divider)" }}>
+              <div className="flex justify-between items-center text-xs">
+                <span className="font-bold opacity-50 uppercase tracking-widest" style={{ color: "var(--mui-palette-text-secondary)" }}>Item:</span>
+                <span className="font-black uppercase truncate max-w-[200px]" style={{ color: "var(--mui-palette-text-primary)" }}>{product?.title}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="font-bold opacity-50 uppercase tracking-widest" style={{ color: "var(--mui-palette-text-secondary)" }}>Buyer:</span>
+                <span className="font-black uppercase" style={{ color: "var(--mui-palette-text-primary)" }}>{otherParticipant?.userName}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="font-bold opacity-50 uppercase tracking-widest" style={{ color: "var(--mui-palette-text-secondary)" }}>Qty:</span>
+                <span className="font-black text-blue-600">{activeChat.quantity || 1} unit(s)</span>
+              </div>
+              <div className="flex justify-between items-center text-xs border-t pt-2" style={{ borderColor: "var(--mui-palette-divider)" }}>
+                <span className="font-bold opacity-50 uppercase tracking-widest" style={{ color: "var(--mui-palette-text-secondary)" }}>Total Price:</span>
+                <span className="font-black text-green-500">₹{((product?.price || 0) * (activeChat.quantity || 1)).toLocaleString()}</span>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-4 w-full">
+              <button
+                onClick={() => setIsConfirmModalOpen(false)}
+                className="flex-1 py-4 border rounded-xl font-black text-xs uppercase tracking-widest bg-transparent hover:bg-gray-500/5 transition-all cursor-pointer active:scale-95 outline-none"
+                style={{ borderColor: "var(--mui-palette-divider)", color: "var(--mui-palette-text-primary)" }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmMarkAsSold}
+                className="flex-1 py-4 bg-green-500 hover:bg-green-600 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-green-500/20 transition-all cursor-pointer active:scale-95 outline-none border-0"
+              >
+                Confirm Sale
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -153,20 +153,6 @@ const Chats = () => {
     };
   }, [activeChat, fetchChats]); // Added fetchChats to dependencies
 
-  // Smart Tab Selection: If current tab is empty but other has content, switch automatically
-  useEffect(() => {
-    if (chats.length > 0 && !activeChat && !isInitiating) {
-      const hasOrders = chats.some(c => c.productId?.seller?.toString() !== user?._id?.toString());
-      const hasSales = chats.some(c => c.productId?.seller?.toString() === user?._id?.toString());
-      
-      if (activeTab === "orders" && !hasOrders && hasSales) {
-        setActiveTab("sales");
-      } else if (activeTab === "sales" && !hasSales && hasOrders) {
-        setActiveTab("orders");
-      }
-    }
-  }, [chats, activeTab, user, activeChat, isInitiating]);
-
 
   const handleSendMessage = (text) => {
     if (!activeChat || !user) return;

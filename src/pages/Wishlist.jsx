@@ -132,10 +132,17 @@ const Wishlist = () => {
 
                     <div className="flex flex-col items-end">
                       <span className="text-3xl font-black text-blue-600">₹{product.price.toLocaleString()}</span>
-                      <div className="flex items-center gap-1.5 mt-1">
-                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                        <span className="text-[10px] font-black opacity-40 uppercase tracking-widest">In Stock</span>
-                      </div>
+                      {product.inStock && product.quantity > 0 ? (
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                          <span className="text-[10px] font-black opacity-40 uppercase tracking-widest">In Stock</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <div className="w-2 h-2 rounded-full bg-red-600 animate-pulse" />
+                          <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">Sold Out</span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -156,6 +163,12 @@ const Wishlist = () => {
                         >
                           <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
                         </svg>
+                      </button>
+                      <button
+                        onClick={() => navigate(`/product/${product._id}`)}
+                        className="flex items-center gap-2 px-6 py-3 rounded-2xl border border-blue-600 text-blue-600 font-black text-xs uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all cursor-pointer active:scale-95"
+                      >
+                        See Details
                       </button>
                       <button 
                         onClick={() => handleMessageClick(product._id, product.seller)}
